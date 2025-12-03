@@ -1,0 +1,100 @@
+module MCPU_reg_tb();
+
+```
+reg clk, reset;
+integer i;
+
+// Instantiate CPU
+MCPU cpuinst (.clk(clk), .reset(reset));
+
+// Clock generation
+initial clk = 0;
+always #5 clk = ~clk;
+
+// Reset sequence
+initial begin
+    reset = 1;
+    #10 reset = 0;
+end
+
+// Wires for waveform viewing
+wire [7:0] R0 = cpuinst.regfileinst.R[0];
+wire [7:0] R1 = cpuinst.regfileinst.R[1];
+wire [7:0] R2 = cpuinst.regfileinst.R[2];
+wire [7:0] R3 = cpuinst.regfileinst.R[3];
+wire [7:0] R4 = cpuinst.regfileinst.R[4];
+wire [7:0] R5 = cpuinst.regfileinst.R[5];
+wire [7:0] R6 = cpuinst.regfileinst.R[6];
+wire [7:0] R7 = cpuinst.regfileinst.R[7];
+wire [7:0] R8 = cpuinst.regfileinst.R[8];
+wire [7:0] R9 = cpuinst.regfileinst.R[9];
+wire [7:0] R10 = cpuinst.regfileinst.R[10];
+wire [7:0] R11 = cpuinst.regfileinst.R[11];
+wire [7:0] R12 = cpuinst.regfileinst.R[12];
+wire [7:0] R13 = cpuinst.regfileinst.R[13];
+wire [7:0] R14 = cpuinst.regfileinst.R[14];
+wire [7:0] R15 = cpuinst.regfileinst.R[15];
+
+// Self-checking benchmark
+initial begin
+    // Initialize RAM and registers
+    for(i=0; i<256; i=i+1) cpuinst.raminst.mem[i] = 8'b0;
+    for(i=0; i<16; i=i+1) cpuinst.regfileinst.R[i] = 0;
+
+    // Load initial values into registers (R0-R15 = 0..15)
+    for(i=0; i<16; i=i+1)
+        cpuinst.raminst.mem[i] = {cpuinst.OP_SHORT_TO_REG, i[3:0], i[7:0]};
+
+    #20; // wait for instructions to execute
+
+    // Check initial values
+    for(i=0; i<16; i=i+1) begin
+        if(cpuinst.regfileinst.R[i] !== i)
+            $display("ERROR: R%0d expected %0d but got %0d", i, i, cpuinst.regfileinst.R[i]);
+        else
+            $display("PASS: R%0d correct = %0d", i, cpuinst.regfileinst.R[i]);
+    end
+
+    // MOV test: R0 <- R15, R1 <- R0
+    cpuinst.raminst.mem[20] = {cpuinst.OP_MOV, 4'd0, 4'd15, 4'b0000};
+    cpuinst.raminst.mem[21] = {cpuinst.OP_MOV, 4'd1, 4'd0, 4'b0000};
+    #20;
+    if(R0 !== 8'd15) $display("ERROR: MOV failed for R0");
+    if(R1 !== 8'd15) $display("ERROR: MOV failed for R1");
+
+    // ADD test: R2 <- R0 + R1
+    cpuinst.raminst.mem[22] = {cpuinst.OP_ADD, 4'd2, 4'd0, 4'd1};
+    #20;
+    if(R2 !== 8'd30) $display("ERROR: ADD failed for R2");
+
+    // XOR test: R3 <- R0 ^ R1
+    cpuinst.raminst.mem[23] = {cpuinst.OP_XOR, 4'd3, 4'd0, 4'd1};
+    #20;
+    if(R3 !== (R0 ^ R1)) $display("ERROR: XOR failed for R3");
+
+    // OR test: R4 <- R0 | R1
+    cpuinst.raminst.mem[24] = {cpuinst.OP_OR, 4'd4, 4'd0, 4'd1};
+    #20;
+    if(R4 !== (R0 | R1)) $display("ERROR: OR failed for R4");
+
+    // AND test: R5 <- R0 & R1
+    cpuinst.raminst.mem[25] = {cpuinst.OP_AND, 4'd5, 4'd0, 4'd1};
+    #20;
+    if(R5 !== (R0 & R1)) $display("ERROR: AND failed for R5");
+
+    // STORE to memory test: mem[250] <- R5
+    cpuinst.raminst.mem[26] = {cpuinst.OP_STORE_TO_MEM, 4'd5, 8'd250};
+    #20;
+    if(cpuinst.raminst.mem[250] !== R5) $display("ERROR: STORE failed for mem[250]");
+
+    // LOAD from memory test: R6 <- mem[250]
+    cpuinst.raminst.mem[27] = {cpuinst.OP_LOAD_FROM_MEM, 4'd6, 8'd250};
+    #20;
+    if(R6 !== R5) $display("ERROR: LOAD failed for R6");
+
+    $display("Testbench finished");
+    #50 $finish;
+end
+```
+
+endmodule
