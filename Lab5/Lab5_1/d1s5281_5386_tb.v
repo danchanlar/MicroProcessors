@@ -1,0 +1,29 @@
+//5_1_a
+module d1s5281_5386_tb();
+
+//input registers to our instantiated module
+reg tb_a;
+reg tb_b;
+reg tb_c;
+
+//bus for writing data to the inputs
+wire [2:0] tb_dut_inputs;
+
+//wire for reading the output
+wire tb_d;
+
+//this is our instance ex module d1s5281_5386(a,b,c,d)
+d1s5281_5386 dut(tb_a,tb_b,tb_c,tb_d);
+
+//creating the bus that holds inputs
+assign tb_dut_inputs={tb_a,tb_b,tb_c};
+
+
+initial begin
+    {tb_a,tb_b,tb_c}=3'b000;
+    //for 5 time units
+    forever #5 {tb_a,tb_b,tb_c}=tb_dut_inputs+1;
+    // 000 001 010 ...
+end
+
+endmodule
