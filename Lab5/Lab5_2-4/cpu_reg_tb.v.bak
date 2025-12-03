@@ -1,0 +1,222 @@
+//5_4_A
+module MCPU_reg_tb();
+
+
+reg reset, clk;
+
+//this is our top-level module
+//here we are creating an instance about MCPU module
+MCPU cpuinst (clk, reset);
+
+
+initial begin
+  reset =1;
+  #10 reset =0;
+end
+
+
+//here we are just having the clock every 5ps 
+always begin
+  #5 clk=0; 
+  #5 clk=1; 
+end
+
+
+/********OUR ASSEMBLER*****/
+
+integer i,file;
+reg[cpuinst.WORD_SIZE-1:0] memi;
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R0  = 0; //4'b0000
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R1  = 1; //4'b0001
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R2  = 2; //4'b0010
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R3  = 3; //4'b0011
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R4  = 4; //4'b0100
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R5  = 5; //4'b0101
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R6  = 6; //4'b0110
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R7  = 7; //4'b0111
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R8  = 8; //4'b1000
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R9  = 9; //4'b1001
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R10  = 10; //4'b1010
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R11  = 11; //4'b1011
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R12  = 12; //4'b1100
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R13  = 13; //4'b1101
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R14  = 14; //4'b1110
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R15  = 15; //4'b1111
+
+
+initial begin
+
+  
+    //initialize our registers
+    for(i=0;i<256;i=i+1)
+    begin
+      cpuinst.raminst.mem[i]=8'b00000000;
+    end
+
+
+    //clear all registers 
+    for(i=0;i<16;i=i+1) begin
+        cpuinst.regfileinst.R[i]=0;
+    end   
+    
+   
+    
+    
+    //initial registers values
+    i=0;  cpuinst.raminst.mem[0]={cpuinst.OP_SHORT_TO_REG, R0, 8'b00000000};   //0: R0=0; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R1, 8'b00000001};   //1: R1=1; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R2, 8'b00000010};   //2: R2=2; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R3, 8'b00000011};   //3: R3=3; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R4, 8'b00000100};   //4: R4=4; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R5, 8'b00000101};   //5: R5=5; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R6, 8'b00000110};   //6: R6=6; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R7, 8'b00000111};   //7: R7=7; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R8, 8'b00001000};   //8: R8=8; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R9, 8'b00001001};   //9: R9=9; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R10, 8'b00001010};   //10: R10=10; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R11, 8'b00001011};   //11: R11=11; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R12, 8'b00001100};   //12: R12=12; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R13, 8'b00001101};   //13: R13=13; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R14, 8'b00001110};   //14: R14=14; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R15, 8'b00001111};   //15: R15=15;  
+    
+
+    //store to memory
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R0, 8'b11001000};   //16: mem[200]=R0; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R1, 8'b11001001};   //17: mem[201]=R1; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R2, 8'b11001010};   //18: mem[202]=R2; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R3, 8'b11001011};   //19: mem[203]=R3; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R4, 8'b11001100};   //20: mem[204]=R4; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R5, 8'b11001101};   //21: mem[205]=R5; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R6, 8'b11001110};   //22: mem[206]=R6; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R7, 8'b11001111};   //23: mem[207]=R7; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R8, 8'b11010000};   //24: mem[208]=R8; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R9, 8'b11010001};   //25: mem[209]=R9; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R10, 8'b11010010};   //26: mem[210]=R10; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R11, 8'b11010011};   //27: mem[211]=R11; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R12, 8'b11010100};   //28: mem[212]=R12; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R13, 8'b11010101};   //29: mem[213]=R13; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R14, 8'b11010110};   //30: mem[214]=R14; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R15, 8'b11010111};   //31: mem[215]=R15;
+
+
+
+    //load from memory
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R0, 8'b11010111};   //32: R0=mem[215];  
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R1, 8'b11010110};   //33: R1=mem[214]; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R2, 8'b11010101};   //34: R2=mem[213]; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R3, 8'b11010100};   //35: R3=mem[212];
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R4, 8'b11010011};   //36: R4=mem[211]; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R5, 8'b11010010};   //37: R5=mem[210]; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R6, 8'b11010001};   //38: R6=mem[209]; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R7, 8'b11010000};   //39: R7=mem[208];
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R8, 8'b11001111};   //40: R8=mem[207];
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R9, 8'b11001110};   //41: R9=mem[206]; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R10, 8'b11001101};   //42: R10=mem[205];
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R11, 8'b11001100};   //43: R11=mem[204];
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R12, 8'b11001011};   //44: R12=mem[203]; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R13, 8'b11001010};   //45: R13=mem[202]; 
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R14, 8'b11001001};   //46: R14=mem[201];
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R15, 8'b11001000};   //47: R15=mem[200];
+
+    //move between registers
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R0, R15, 4'b0000};   //48: R0=R1;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R1, R2, 4'b0000};   //49: R1=R2;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R2, R3, 4'b0000};   //50: R2=R3;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R3, R4, 4'b0000};   //51: R3=R4;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R4, R5, 4'b0000};   //52: R4=R5;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R5, R6, 4'b0000};   //53: R5=R6;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R6, R7, 4'b0000};   //54: R6=R7;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R7, R8, 4'b0000};   //55: R7=R8;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R8, R9, 4'b0000};   //56: R8=R9;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R9, R10, 4'b0000};   //57: R9=R10;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R10, R11, 4'b0000};   //58: R10=R11;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R11, R12, 4'b0000};   //59: R11=R12;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R12, R13, 4'b0000};   //60: R12=R13;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R13, R14, 4'b0000};   //61: R13=R14;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R14, R15, 4'b0000};   //62: R14=R15;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_MOV, R15, R0, 4'b0000};   //63: R15=R0;
+    
+    //ADD OPERATIONS
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_ADD, R15, R0, R1};   //63: R15=R0+R1;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_ADD, R15, R1, R2};   //64: R15=R1+R2;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_ADD, R15, R2, R3};   //65: R15=R2+R3;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_ADD, R15, R3, R4};   //66: R15=R3+R4;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_ADD, R15, R4, R5};   //67: R15=R4+R5;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_ADD, R15, R6, R7};   //68: R15=R6+R7;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_ADD, R15, R7, R8};   //69: R15=R7+R8;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_ADD, R15, R9, R10};   //70: R15=R9+R10;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_ADD, R15, R10, R11};   //71: R15=R10+R11;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_ADD, R15, R11, R12};   //72: R15=R11+R12;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_ADD, R15, R12, R13};   //73: R15=R12+R13;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_ADD, R15, R13, R14};   //74: R15=R13+R14;
+
+    //XOR OPERATIONS R15 -> R_destination
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R15, R0, R1};   //75: R15=R0^R1;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R15, R1, R2};   //76: R15=R1^R2;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R15, R2, R3};   //77: R15=R2^R3;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R15, R3, R4};   //78: R15=R3^R4;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R15, R4, R5};   //79: R15=R4^R5;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R15, R5, R6};   //80: R15=R5^R6;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R15, R6, R7};   //81: R15=R6^R7;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R15, R7, R8};   //82: R15=R7^R8;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R15, R8, R9};   //83: R15=R8^R9;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R15, R9, R10};   //84: R15=R9^R10;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R15, R10, R11};   //85: R15=R10^R11;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R15, R11, R12};   //86: R15=R11^R12;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R15, R12, R13};   //87: R15=R12^R13;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R15, R13, R14};   //88: R15=R13^R14;
+
+
+    //OR OPERATIONS R15 -> R_destination
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_OR, R15, R0, R1};   //89: R15=R0|R1;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_OR, R15, R1, R2};   //90: R15=R1|R2;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_OR, R15, R2, R3};   //91: R15=R2|R3;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_OR, R15, R3, R4};   //92: R15=R3|R4;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_OR, R15, R4, R5};   //93: R15=R4|R5;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_OR, R15, R5, R6};   //94: R15=R5|R6;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_OR, R15, R6, R7};   //95: R15=R6|R7;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_OR, R15, R7, R8};   //96: R15=R7|R8;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_OR, R15, R8, R9};   //97: R15=R8|R9;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_OR, R15, R9, R10};   //98: R15=R9|R10;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_OR, R15, R10, R11};   //99: R15=R10|R11;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_OR, R15, R11, R12};   //100: R15=R11|R12;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_OR, R15, R12, R13};   //101: R15=R12|R13;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_OR, R15, R13, R14};   //102: R15=R13|R14;
+
+
+    //AND OPERATIONS R15 -> R_destination
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_AND, R15, R0, R1};   //103: R15=R0&R1;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_AND, R15, R1, R2};   //104: R15=R1&R2;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_AND, R15, R2, R3};   //105: R15=R2&R3;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_AND, R15, R3, R4};   //106: R15=R3&R4;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_AND, R15, R4, R5};   //107: R15=R4&R5;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_AND, R15, R5, R6};   //108: R15=R5&R6;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_AND, R15, R6, R7};   //109: R15=R6&R7;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_AND, R15, R7, R8};   //110: R15=R7&R8;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_AND, R15, R8, R9};   //111: R15=R8&R9;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_AND, R15, R9, R10};   //112: R15=R9&R10;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_AND, R15, R10, R11};   //113: R15=R10&R11;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_AND, R15, R11, R12};   //114: R15=R11&R12;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_AND, R15, R12, R13};   //115: R15=R12&R13;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_AND, R15, R13, R14};   //116: R15=R13&R14;
+
+    //restart PC
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_BNZ, R2, 8'b00000000};   //117: if(R2!=0) then return to mem[0] 
+
+    file = $fopen("program.list","w");
+    for(i=0;i<cpuinst.raminst.RAM_SIZE;i=i+1)
+    begin
+      memi=cpuinst.raminst.mem[i];
+      
+      $fwrite(file, "%b_%b_%b_%b\n", 
+        memi[cpuinst.INSTRUCTION_SIZE-1:cpuinst.INSTRUCTION_SIZE-cpuinst.OPCODE_SIZE],
+        memi[cpuinst.OPCODE_SIZE*3-1:2*cpuinst.OPCODE_SIZE],
+        memi[cpuinst.OPCODE_SIZE*2-1:cpuinst.OPCODE_SIZE],
+        memi[cpuinst.OPCODE_SIZE-1:0]);
+    end
+    $fclose(file);
+
+end
+
+endmodule

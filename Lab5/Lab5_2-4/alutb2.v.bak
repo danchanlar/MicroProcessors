@@ -1,0 +1,59 @@
+//5_2_B
+module MCPU_Alutb2();
+
+parameter CMD_SIZE=2;
+parameter WORD_SIZE=8;
+
+reg [CMD_SIZE-1:0] opcode;
+reg [WORD_SIZE-1:0] r1;
+reg [WORD_SIZE-1:0] r2;
+wire [WORD_SIZE-1:0] out;
+wire OVERFLOW;
+
+//add register here
+reg [WORD_SIZE-1:0] correct;
+
+reg isCorrect;
+
+MCPU_Alu #(.CMD_SIZE(CMD_SIZE), .WORD_SIZE(WORD_SIZE)) aluinst (opcode, r1, r2, out, OVERFLOW);
+
+// Testbench code goes here.
+always begin
+  //5281
+  #3 r1=8'b00000101; //5
+  #3 r1=8'b00000010; //2
+  #3 r1=8'b00001000; //8
+  #3 r1=8'b00000001; //1
+end
+always begin
+  //5386
+  #3 r2=8'b00000101; //5
+  #3 r2=8'b00000011; //3
+  #3 r2=8'b00001000; //8
+  #3 r2=8'b00000110; //6
+
+end
+
+
+always #5 opcode = $random %4;
+
+initial begin
+  forever #5 begin
+    case(opcode)
+      2'b00: correct = r1&r2;
+      2'b01: correct = r1|r2;
+      2'b10: correct = r1^r2;//xor
+      2'b11: correct = r1+r2;//add
+    endcase
+    correct = correct[WORD_SIZE-1:0];
+    #1;
+    isCorrect =(out == correct);
+  end
+end
+
+
+initial begin
+  $display("@%0dns default is selected, opcode %b",$time,opcode);
+end
+
+endmodule

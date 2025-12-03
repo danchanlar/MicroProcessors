@@ -1,0 +1,46 @@
+//5_1_b
+module d1s5281_5386_tb2();
+
+//input registers to our instantiated module
+reg tb_a;
+reg tb_b;
+reg tb_c;
+
+//add register to check
+reg d_correct;
+
+//bus for writing data to the inputs
+wire [2:0] tb_dut_inputs;
+
+//wire for reading the output.
+wire tb_d;
+
+//this is our instance ex module d1s5281_5386(a,b,c,d)
+d1s5281_5386 dut(tb_a,tb_b,tb_c,tb_d);
+
+//creating the bus that holds inputs
+assign tb_dut_inputs={tb_a,tb_b,tb_c};
+
+
+
+initial begin
+    {tb_a,tb_b,tb_c}=3'b000;
+    //for 5 time units
+    forever #5 begin
+        {tb_a,tb_b,tb_c}=tb_dut_inputs+1;
+    end
+    // 000 001 010 ...
+end
+
+initial begin
+    forever #2 begin
+      
+        //output 1 mono otan a=1,b=1,c=0
+        //pairnoume kykloma paradeigmatos
+        if(tb_d == 1)
+          d_correct =1;
+        else
+          d_correct = 0;  
+    	end
+end
+endmodule

@@ -1,0 +1,100 @@
+//5_4_B
+module MCPU_reg_tb2();
+
+
+reg reset, clk;
+
+//this is our top-level module
+//here we are creating an instance about MCPU module
+MCPU cpuinst (clk, reset);
+
+
+initial begin
+  reset=1; //set the reset input to 1
+  #10  reset=0; //and after 10ps set the reset to zero
+end
+
+//here we are just having the clock every 5ps
+always begin
+  #5 clk=0;
+  #5 clk=1;
+end
+
+/********OUR ASSEMBLER*****/
+
+integer file, i;
+reg[cpuinst.WORD_SIZE-1:0] memi;
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R0  = 0; //4'b0000
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R1  = 1; //4'b0001
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R2  = 2; //4'b0010
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R3  = 3; //4'b0011
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R4  = 4; //4'b0100
+
+initial
+begin
+
+    //initialize our registers
+    for(i=0;i<256;i=i+1)
+    begin
+      cpuinst.raminst.mem[i]=16'b0;
+    end
+
+    //clear all registers
+    for(i=0;i<16;i=i+1) begin
+        cpuinst.regfileinst.R[i]=0;
+    end
+
+    /***
+        5281
+    */
+
+    //initial registers
+    i=0;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R0, 8'b00110100};   //0: R0=52;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R1, 8'b01010001};   //1: R1=81;
+    // i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R2, 8'b00000000};   //2: R2=2; //this register is about repeat
+
+    //store to memory
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R0, 8'b01100100};   //3: mem[100]=R0;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R1, 8'b01100101};   //4: mem[101]=R1;
+
+    //load from memory to other registers
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R2, 8'b01100100};   //5: R2=mem[100];
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R3, 8'b01100101};   //6: R3=mem[101];
+
+    //ADD OPERATION
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_ADD, R4, R2, R3};   //7: R4=R2+R3;
+
+    //XOR OPERATION
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R4, R2, R3};   //8: R4=R2^R3;
+
+    /***
+        5386
+    */
+
+    //initial registers
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R0, 8'b00110101};   //9: R0=53;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R1, 8'b01010110};   //10: R1=86;
+    // i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R2, 8'b00000000};   //11: R2=2; //this register is about repeat
+
+    //store to memory
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R0, 8'b01100100};   //12: mem[100]=R0;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_STORE_TO_MEM, R1, 8'b01100101};   //13: mem[101]=R1;
+
+    //load from memory to other registers
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R2, 8'b01100100};   //14: R2=mem[100];
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LOAD_FROM_MEM, R3, 8'b01100101};   //15: R3=mem[101];
+
+    //ADD OPERATION
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_ADD, R4, R2, R3};   //16: R4=R2+R3;
+
+    //XOR OPERATION
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_XOR, R4, R2, R3};   //17: R4=R2^R3;
+
+    //return to base
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_BNZ, R2, 8'b00000000};   //18: if(R2!=0) then return to mem[0]
+
+end
+
+
+
+endmodule
