@@ -1,0 +1,111 @@
+module MCPU_LSL_tb();
+
+
+reg reset, clk;
+
+//this is our top-level module
+//here we are creating an instance about MCPU module
+MCPU cpuinst (clk, reset);
+
+
+initial begin
+  reset=1; //set the reset input to 1
+  #10  reset=0; //and after 10ps set the reset to zero
+end
+
+//here we are just having the clock every 5ps
+always begin
+  #5 clk=0;
+  #5 clk=1;
+end
+
+
+/********OUR ASSEMBLER*****/
+
+integer file, i;
+reg[cpuinst.WORD_SIZE-1:0] memi;
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R0  = 0; //4'b0000
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R1  = 1; //4'b0001
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R2  = 2; //4'b0010
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R3  = 3; //4'b0011 
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R4  = 4; //4'b0100
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R5  = 5; //4'b0101
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R6  = 6; //4'b0110
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R7  = 7; //4'b0111
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R8  = 8; //4'b1000
+ 
+initial
+begin
+
+    //initialize our registers
+    for(i=0;i<256;i=i+1)
+    begin
+      cpuinst.raminst.mem[i]=0;
+    end
+    cpuinst.regfileinst.R[0]=0;
+    cpuinst.regfileinst.R[1]=0;
+    cpuinst.regfileinst.R[2]=0;
+    cpuinst.regfileinst.R[3]=0;
+    cpuinst.regfileinst.R[4]=0;
+    cpuinst.regfileinst.R[5]=0;
+    cpuinst.regfileinst.R[6]=0;
+    cpuinst.regfileinst.R[7]=0;
+    cpuinst.regfileinst.R[8]=0;
+
+
+/*
+                                                                            //memory address: instruction
+    i=0;  cpuinst.raminst.mem[0]={cpuinst.OP_SHORT_TO_REG, R2, 8'b00000010};   //0: R2=2;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R1, 8'b00001001};   //0: R0=9;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LSL, R0, R1, R2};   //0: R0=R1<<R2;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LSR, R0, R1, R2};   //0: R0=R1>>R2;
+    //AM 5281
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R1, 8'b00110100};   //0: R1=52;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R2, 8'b01010001};   //R2=81;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LSL, R0, R2, R1};   //0: R0=R1<<R2;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R2, 8'b11110101};
+    i=i+1; cpuinst.raminst.mem[i]={cpuinst.OP_OR, R0, R0, R2};
+    //AM 5386
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R1, 8'b00110101};   //0: R1=53;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R2, 8'b01010110}; //R2=86;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_LSL, R0, R2, R1};   //0: R0=R1<<R2;
+    i=i+1;  cpuinst.raminst.mem[i]={cpuinst.OP_SHORT_TO_REG, R2, 8'b00111000};
+    i=i+1; cpuinst.raminst.mem[i]={cpuinst.OP_OR, R0, R0, R2};
+
+*/
+
+//lsl, lsr test
+  i=0; cpuinst.raminst.mem[i] = {cpuinst.OP_SHORT_TO_REG, R2, 8'b00000010};   // R2 = 2
+  i=i+1; cpuinst.raminst.mem[i] = {cpuinst.OP_SHORT_TO_REG, R1, 8'b00001001};   // R1 = 9
+  i=i+1; cpuinst.raminst.mem[i] = {cpuinst.OP_LSL, R0, R1, R2};                 // R0 = 9 << 2
+  i=i+1; cpuinst.raminst.mem[i] = {cpuinst.OP_LSR, R0, R1, R2};                 // R0 = 9 >> 2
+
+
+// vazoume to proto AM 5281 me texniki high+low byte
+// high = 20  (00010100)
+// low  = 161 (10100001)
+
+  i=i+1; cpuinst.raminst.mem[i] = {cpuinst.OP_SHORT_TO_REG, R3, 8'b00001000};   // R3 = 8 (shift count)
+
+  i=i+1; cpuinst.raminst.mem[i] = {cpuinst.OP_SHORT_TO_REG, R4, 8'b00010100};   // R4 = 20 (high byte)
+  i=i+1; cpuinst.raminst.mem[i] = {cpuinst.OP_LSL, R5, R4, R3};                 // R5 = 20 << 8 
+
+  i=i+1; cpuinst.raminst.mem[i] = {cpuinst.OP_SHORT_TO_REG, R4, 8'b10100001};   // R4 = 161 (low byte)
+  i=i+1; cpuinst.raminst.mem[i] = {cpuinst.OP_OR,  R5, R5, R4};                 // R5 = 5120 | 161 = 5281
+  i=i+1; cpuinst.raminst.mem[i] = {cpuinst.OP_LSL, R8, R5, R2};                 //R8 dummy register gia test sto am
+
+
+// vazoume deutero AM 5386
+// high = 21  (00010101)
+// low  =  10 (00001010)
+
+
+  i=i+1; cpuinst.raminst.mem[i] = {cpuinst.OP_SHORT_TO_REG, R6, 8'b00010101};  // R6 = 21 (high)
+  i=i+1; cpuinst.raminst.mem[i] = {cpuinst.OP_LSL, R7, R6, R3};                // R7 = 21 << 8 = 5376
+
+  i=i+1; cpuinst.raminst.mem[i] = {cpuinst.OP_SHORT_TO_REG, R6, 8'b00001010};  // R6 = 10 (low)
+  i=i+1; cpuinst.raminst.mem[i] = {cpuinst.OP_OR,  R7, R7, R6};                // R7 = 5376 | 10 = 5386
+  i=i+1; cpuinst.raminst.mem[i] = {cpuinst.OP_LSR, R8, R7, R2}; 
+end
+
+endmodule

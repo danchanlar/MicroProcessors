@@ -1,0 +1,102 @@
+//6_2_B
+module MCPU_Heilstone_5386_tb();
+
+
+reg reset, clk;
+
+//this is our top-level module
+//here we are creating an instance about MCPU module
+MCPU cpuinst (clk, reset);
+
+
+initial begin
+  reset=1; //set the reset input to 1
+  #10  reset=0; //and after 10ps set the reset to zero
+end
+
+//here we are just having the clock every 5ps
+always begin
+  #5 clk=0;
+  #5 clk=1;
+end
+
+
+/********OUR ASSEMBLER*****/
+
+integer file, i;
+reg[cpuinst.WORD_SIZE-1:0] memi;
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R0  = 0; //4'b0000
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R1  = 1; //4'b0001
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R2  = 2; //4'b0010
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R3  = 3; //4'b0011
+parameter  [cpuinst.OPERAND_SIZE-1:0]  R4  = 3; //4'b0100
+initial
+begin
+
+    //initialize our registers
+    for(i=0;i<256;i=i+1)
+    begin
+      cpuinst.raminst.mem[i]=0;
+    end
+    cpuinst.regfileinst.R[0]=0;
+    cpuinst.regfileinst.R[1]=0;
+    cpuinst.regfileinst.R[2]=0;
+    cpuinst.regfileinst.R[3]=0;
+    cpuinst.regfileinst.R[4]=0;
+
+
+    /*
+    * R0 -> n
+    * R2 -> condition 1-When n!=1 0-when n==0
+    * R1 -> 1;
+    * R3-> condition 1-When odd   0-When even
+    * R4-> holds the n value for 3*n+1
+    */
+
+                                                        //memory address: instruction
+
+    //load 5386
+    cpuinst.raminst.mem[0]={cpuinst.OP_SHORT_TO_REG, R1, 8'b00001000};   //0: R0=8;
+    cpuinst.raminst.mem[1]={cpuinst.OP_SHORT_TO_REG, R2, 8'b00010101};
+    cpuinst.raminst.mem[2]={cpuinst.OP_LSL, R0, R2, R1};   //0: R0=R1<<R2;
+    cpuinst.raminst.mem[3]={cpuinst.OP_SHORT_TO_REG, R2, 8'b00001010};
+    cpuinst.raminst.mem[4]={cpuinst.OP_OR, R0, R0, R2};
+
+    cpuinst.raminst.mem[5]={cpuinst.OP_SHORT_TO_REG, R1, 8'b00000001};   //0: R1=1;
+
+
+//CHECK_N:
+    cpuinst.raminst.mem[6]={cpuinst.OP_XOR, R2, R0, R1}; //  IF R2 IS ZERO THEN THE N==1
+    cpuinst.raminst.mem[7]={cpuinst.OP_BNZ, R2, 8'b00001010}; // R2!=0 jump LOOP_IF
+    //this case is n==1 so R2==0
+    cpuinst.raminst.mem[8]={cpuinst.OP_SHORT_TO_REG, R2, 8'b00000001}; //r2 = 1;
+    cpuinst.raminst.mem[9]={cpuinst.OP_BNZ, R2, 8'b00001111}; // R2!=0 jump EXIT
+
+
+//LOOP_IF:
+    //if(n is odd) condition
+    cpuinst.raminst.mem[10]={cpuinst.OP_AND, R3, R0, R1}; //  IF R3:1 THEN ODD ELSE EVEN
+    cpuinst.raminst.mem[11]={cpuinst.OP_BNZ, R3, 8'b00001110}; // R3!=0 (then ODD) jump LOOP_TRUE:
+    //else{...}
+    cpuinst.raminst.mem[12]={cpuinst.OP_LSR, R0, R0, R1};   //0: n=n/2    R0=R0>>1;
+    cpuinst.raminst.mem[13]={cpuinst.OP_BNZ, R1, 8'b00000110}; // jump CHECK_N
+
+//LOOP_TRUE:
+    //if(n is odd){...}
+    cpuinst.raminst.mem[14]={cpuinst.OP_MOV, R4, R0, 4'b0000}; // R4=n=R0 which holds the n
+    cpuinst.raminst.mem[15]={cpuinst.OP_LSL, R0, R0, R1};  // n=2n [n=2n+n+1]
+    cpuinst.raminst.mem[16]={cpuinst.OP_ADD, R0, R0, R4};  // n = n+R4 [n=2n+n+1]
+    cpuinst.raminst.mem[17]={cpuinst.OP_ADD, R0, R0, R1};  // n = n+1 [n=2n+n+1]
+    cpuinst.raminst.mem[18]={cpuinst.OP_BNZ, R1, 8'b00000110}; // jump CHECK_N
+
+
+//EXIT:
+    cpuinst.raminst.mem[19]={cpuinst.OP_SHORT_TO_REG, R0, 8'b00000000};   //0: R0=0; --- WE ARE DONE
+
+
+
+
+
+end
+
+endmodule
